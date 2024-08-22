@@ -7,13 +7,29 @@
 
 import SwiftUI
 
+
+struct TipSelectionView: View {
+    @Binding var tipPercentage: Int
+    @Environment(\.presentationMode) var presentationMode
+
+    var body: some View {
+        List(0..<101) { percentage in
+            Text("\(percentage)%")
+                .onTapGesture {
+                    tipPercentage = percentage
+                    presentationMode.wrappedValue.dismiss()
+                }
+        }
+        .navigationTitle("Select Tip Percentage")
+    }
+}
+
+
 struct ContentView: View {
     @State private var checkAmount = 0.0
     @State private var numberOfPeople = 2
     @State private var tipPercentage = 20
     @FocusState private var amountIsFocused: Bool
-
-    let tipPercentages = [10, 15, 20, 25, 0]
 
     var totalPerPerson: Double {
         let peopleCount = Double(numberOfPeople + 2)
@@ -26,32 +42,46 @@ struct ContentView: View {
         return amountPerPerson
     }
 
+    var grandTotal: Double {
+        let tipSelection = Double(tipPercentage)
+        let tipValue = checkAmount / 100 * tipSelection
+        let total = checkAmount + tipValue
+
+        return total
+    }
+
     var body: some View {
-        NavigationStack {
+        NavigationStack{
             Form {
                 Section {
                     TextField("Amount", value: $checkAmount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                         .keyboardType(.decimalPad)
                         .focused($amountIsFocused)
-
+                    
                     Picker("Number of people", selection: $numberOfPeople) {
                         ForEach(2..<100) {
                             Text("\($0) people")
                         }
                     }
                 }
-
-                Section("How much do you want to tip?") {
-                    Picker("Tip percentage", selection: $tipPercentage) {
-                        ForEach(tipPercentages, id: \.self) {
-                            Text($0, format: .percent)
+                
+                VStack {
+                    Section(header: Text("How much do you want to tip?")
+                        .frame(maxWidth: .infinity, alignment: .center)) {
+                        NavigationLink(destination: TipSelectionView(tipPercentage: $tipPercentage)) {
+                            Text("\(tipPercentage)%")
+                                .foregroundColor(.purple)
+                                .frame(maxWidth: .infinity, alignment: .center)
                         }
                     }
-                    .pickerStyle(.segmented)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
-
-                Section {
+                Section(header: Text("Amount per person")) {
                     Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                }
+                
+                Section(header: Text("Total amount")) {
+                    Text(grandTotal, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                 }
             }
             .navigationTitle("WeSplit")
