@@ -11,10 +11,13 @@ import SwiftUI
 struct TipSelectionView: View {
     @Binding var tipPercentage: Int
     @Environment(\.presentationMode) var presentationMode
+    var checkAmount: Double
 
     var body: some View {
         List(0..<101) { percentage in
-            Text("\(percentage)%")
+            let tipValue = checkAmount / 100 * Double(percentage)
+            Text("\(percentage)% (Tip total: \(tipValue, format: .currency(code: Locale.current.currency?.identifier ?? "USD")))")
+                .frame(maxWidth: .infinity, alignment: .center)
                 .onTapGesture {
                     tipPercentage = percentage
                     presentationMode.wrappedValue.dismiss()
@@ -23,6 +26,7 @@ struct TipSelectionView: View {
         .navigationTitle("Select Tip Percentage")
     }
 }
+
 
 
 struct ContentView: View {
@@ -66,22 +70,32 @@ struct ContentView: View {
                 }
                 
                 VStack {
-                    Section(header: Text("How much do you want to tip?")
-                        .frame(maxWidth: .infinity, alignment: .center)) {
-                        NavigationLink(destination: TipSelectionView(tipPercentage: $tipPercentage)) {
-                            Text("\(tipPercentage)%")
-                                .foregroundColor(.purple)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                }
+                                    Section(header: Text("How much do you want to tip?")
+                                        .frame(maxWidth: .infinity, alignment: .center)) {
+                                        NavigationLink(destination: TipSelectionView(tipPercentage: $tipPercentage, checkAmount: checkAmount)) {
+                                            Text("\(tipPercentage)%")
+                                                .foregroundColor(.purple)
+                                                .frame(maxWidth: .infinity, alignment: .center)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                }
                 Section(header: Text("Amount per person")) {
                     Text(totalPerPerson, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                 }
                 
                 Section(header: Text("Total amount")) {
-                    Text(grandTotal, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                    Text(grandTotal, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                        .foregroundColor(tipPercentage == 0 ? .red : .primary)
+                }
+                if tipPercentage == 0 {
+                    VStack {
+                        Text("You are not leaving a tip 😅")
+                            .foregroundColor(.red)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                    }
+                } else {
+                    
                 }
             }
             .navigationTitle("WeSplit")
